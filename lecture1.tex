@@ -10,7 +10,35 @@
 % This template is based on the template for Prof. Sinclair's CS 270.
 
 \documentclass[twoside]{article}
-\usepackage{graphics}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{listings}
+%\lstdefinestyle{customc}{
+%  belowcaptionskip=1\baselineskip,
+%  breaklines=true,
+%  frame=L,
+%  xleftmargin=\parindent,
+%  language=C,
+%  showstringspaces=false,
+%  basicstyle=\footnotesize\ttfamily,
+%  keywordstyle=\bfseries\color{green!40!black},
+%  commentstyle=\itshape\color{purple!40!black},
+%  identifierstyle=\color{blue},
+%  stringstyle=\color{orange},
+%}
+%
+%\lstdefinestyle{customasm}{
+%  belowcaptionskip=1\baselineskip,
+%  frame=L,
+%  xleftmargin=\parindent,
+%  language=[x86masm]Assembler,
+%  basicstyle=\footnotesize\ttfamily,
+%  commentstyle=\itshape\color{purple!40!black},
+%}
+
+%\lstset{escapechar=@,style=customc}
 \setlength{\oddsidemargin}{0.25 in}
 \setlength{\evensidemargin}{-0.25 in}
 \setlength{\topmargin}{-0.6 in}
@@ -97,7 +125,7 @@
 \begin{document}
 %FILL IN THE RIGHT INFO.
 %\lecture{**LECTURE-NUMBER**}{**DATE**}{**LECTURER**}{**SCRIBE**}
-\lecture{1}{August 24}{Vijay Garg}{Your Name}
+\lecture{1}{August 24}{Vijay Garg}{Michael Bartling}
 %\footnotetext{These notes are partially based on those of Nigel Mansell.}
 
 % **** YOUR NOTES GO HERE:
@@ -107,51 +135,106 @@
 %**** IN GENERAL, BE BRIEF. LONG SCRIBE NOTES, NO MATTER HOW WELL WRITTEN,
 %**** ARE NEVER READ BY ANYBODY.
 \section{Introduction}
-Students in EE 382C are required to scribe lecture notes for one lecture.
-These lecture notes will be done using the document processing system called Latex.
-We have posted the file {\em scribe.tex} on the Canvas system. You can run {\tt pdflatex}
-on that file to generate {\em scribe.pdf}. The remaining document shows usage of
-some of the commands in Latex.
+In this class we introduce the concept of concurrent programming using multiple libraries including Thread programming in Java, pthreads in C, openMP, and CUDA (for GPU compute). We also introduce the concept of formal verification of parallel programming. Finally, we end with an example of a set of parallel forms of a simple algorithm. 
 
-\section{All Pairs Shortest Paths}
+\section{Special Note}
 
-The naive and obvious solution to All Pairs Shortest Path(APSP) problem is to
-run a Single Source Shortest Path algorithm from each starting vertex
-$v$.  If the graph has arbitrary edge weights, it takes the Bellman-Ford
-algorithm $O(|E||V|^2)$ time to solve APSP.  But there
-are better approaches.
+Dr. Garg\'s office hours are a gun free zone. 
 
-\subsection{Floyd-Warshall Algorithm: Dynamic Programming}
+\section{Parallel Frameworks}
 
-Label the vertices $1,2,\ldots,n$.
-Define $d^{(k)}(i,j)$ to be the length of a shortest path from $i$
-to $j$, using intermediate vertices from \{$1,2,\ldots,k$\} only.
-Obviously, $d^{(n)}(i,j)$ is the full problem.  
+\textbf{Note:} all of the following code examples can be found at the course GitHub \url{https://github.com/mbartling/UT-Garg-EE382C-EE361C-Multicore/tree/master/chapter1-threads}
 
-\ldots
+\subsection{Java}
+Parallelism in Java can be achieved in one of a few ways. In the first method we just extend the Java Thread class:
+\lstinputlisting[language=Java]{HelloWorldThread.java}
 
-\section{Transitive Closure}
+Another option is to implement \texttt{Run()} such as:
+\lstinputlisting[language=Java]{FooBar.java}
 
-Our goal is to achieve running time $O(M(n)\log n)$ for APSP where
-$M(n)$ is the time for $n\times n$ matrix multiplication.  Let's see
-if we can achieve this for a simpler but related problem, namely
-{\it Transitive Closure\/}:
+\subsection{OpenMP}
+OpenMP makes trivial parallel paradigms in C, such as parallel for loops and simple threads, well \textit{trivial}. The following code snippet shows a simple task creation, however parallel for loops are about as simple as \texttt{parfor} in Matlab. In GCC on Linux you need to use the \texttt{-fopenmp} flag to compile with openMP support.
 
-\ldots
+\lstinputlisting[language=C]{helloOpenMP.c}
 
-\section*{References}
-\beginrefs
-\bibentry{AGM97}{\sc N.~Alon}, {\sc Z.~Galil} and {\sc O.~Margalit},
-On the Exponent of the All Pairs Shortest Path Problem,
-{\it Journal of Computer and System Sciences\/}~{\bf 54} (1997),
-pp.~255--262.
+\subsection{pthreads}
+POSIX threads or \textit{pthreads} for short, are a type of thread compatible with the POSIX standard. pthreads are most commonly programmed in C and C++, however they are available in other languages. Furthermore, pthreads are approximately compatible with most common operating systems. Note, in GCC you need to link against the pthreads library to use them, this can be done with the \texttt{-lpthread} linker flag.
 
-\bibentry{F76}{\sc M. L. ~Fredman}, New Bounds on the Complexity of the 
-Shortest Path Problem, {\it SIAM Journal on Computing\/}~{\bf 5} (1976), 
-pp.~83-89.
-\endrefs
+\lstinputlisting[language=C]{helloPthread.c}
+
+\subsection{GPGPU's and CUDA Programming}
+Traditionally, GPU programming has been \textit{locked in} to graphics oriented tasks. Over time this programming model has shifted towards a more software defined model. Nowadays, GPGPU's, or general purpose graphics processing units, handle many highly parallelizable tasks such as computing the back-propagation algorithm in Deep Neural Networks, Hogwild gradient descent methods, recursive and iterative ray-tracing, and other performance critical parallel computations. The basic programming paradigm is the \textit{kernel}. The kernel describes both a task and how to distribute this task on the GPU including the resources to utilize. Optimizing the kernel is challenging both for programmers and for compiler writers. 
+
+\textbf{NOTE:} CUDA programs can be compiled using \texttt{nvcc}.
+
+\begin{figure}[thbp]
+  \centering
+  \includegraphics[width=0.95\textwidth]{host-to-gpu}
+  \caption{GPU Architecture: GPU's are effectively a multicore processor where each \textit{core} (approximately 15-20) has its own set of compute units. These compute units are often confused with cores in the whitepapers (e.g. the Nvidia GTX 980 has 2200 CUDA cores!). The true cores are often referred to as Streaming Multiprocessors.}
+\end{figure}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+#define NUM_BLOCKS 16
+#define BLOCK_WIDTH 1
+
+__global__ void hello()
+{
+    printf("Hello world! I'm a thread in block %d\n", blockIdx.x);
+}
 
 
+int main(int argc,char **argv)
+{
+    // launch the kernel
+    hello<<<NUM_BLOCKS, BLOCK_WIDTH>>>();
+
+    // force the printf()s to flush
+    cudaDeviceSynchronize();
+
+    printf("That's all!\n");
+
+    return 0;
+}
+\end{lstlisting}
+
+\section{Formal Verification}
+Oftentimes, determining whether our concurrent model is correct is a non-trivial task. Luckily tools like Promela and Spin exist to formally verify our concurrent model. Spin is used to run promela files and is invoked as following 
+
+\texttt{\$> spin promelaFile.pml}
+
+The following is an example of a Promela model:
+\begin{lstlisting}
+active [2] proctype user()
+{
+    printf("Hello from thread %d\n", _pid);
+}
+
+init {
+    printf("Main: Hello from thread %d\n", _pid);
+}
+\end{lstlisting}
+
+\section{Ideal Parallel RAM model: PRAM}
+
+
+\section{Max Element Algorithm}
+
+\begin{algorithm}
+    \begin{algorithmic}[]
+	\State $\forall i, isBiggest[i] := 1$
+        \ForAll{$i, j$}
+	    \If{$A[j] > A[i]$}
+            	\State $isBiggest[i] \gets 0$
+	    \EndIf
+        \EndFor
+	\If{$isBiggest[i]$}
+	   \State $MAX := A[i]$
+	\EndIf
+    \end{algorithmic}
+    \caption{Ludicrous Speed Algorithm}
+\end{algorithm}
 \end{document}
 
 
