@@ -217,9 +217,46 @@ init {
 \end{lstlisting}
 
 \section{Ideal Parallel RAM model: PRAM}
+We can think of PRAM as an "Ideal Parallel Machine," where each processing element, PE, communicates with a shared memory structure. See \ref{fig:pram}. This model is accessed using multiple methods including:
+
+\begin{itemize}
+  \item CREW
+  \item EREW
+  \item Common CRCW
+\end{itemize}
+
+Where E stands for exclusive, R for read, W for write, and C for concurrent.
+
+\begin{figure}[thb]
+  \label{fig:pram}
+  \centering
+  \includegraphics[width=0.75\textwidth]{pram}
+  \caption{PRAM Model}
+\end{figure}
 
 
 \section{Max Element Algorithm}
+Suppose we want to find the max element in a sequence or array.
+
+\subsection{Naive Algorithm}
+The naive approach is to just access each element 1 time sequentially computing the max.
+This has the following time and work complexities, assuming all the numbers are unique:
+
+$$T(N) = O(N)$$
+$$W(N) = O(N)$$
+
+\subsection{Binary Tree Algorithm}
+But can we do better? Yes. If we treat the decision problem as a binary tree then we can get $logn$ time complexity. Note, this processes is similar to MapReduce. The basic idea is to divide and conquer. Here, the original list is assigned to a set of workers who make decisions which look like a binary tree. The root of this tree is the max value.
+
+$$T(N) = O(logN)$$
+$$W(N) = O(N)$$
+
+Note, we cannot do better than $O(N)$ work complexity since we must visit all nodes. This is just common sense.
+\subsection{Ludicrous Speed}
+What about an algorithm using as many workers as possible to solve the task? Then we can embed the max value problem into a sort of dependency matrix.
+
+$$T(N) = O(1)$$
+$$W(N) = O(N^2)$$
 
 \begin{algorithm}
     \begin{algorithmic}[]
